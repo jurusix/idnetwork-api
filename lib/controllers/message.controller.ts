@@ -1,83 +1,78 @@
-import App from "../app";
 import { Request, Response } from "express";
-import * as mysql from "mysql";
+import { Message } from "../models/message.model";
 import { validationResult, ValidationError, Result } from "express-validator";
 
 
 export class MessageController {
-  public getMessages(req: Request, res: Response): void {
-    App.pool.getConnection((err, connection) => {
-      if (err) {
-        res.send(err);
-      }
+  public async getMessages(req: Request, res: Response): Promise<any> {
+    let messages: Message[];
 
-      connection.query("SELECT * FROM message", (err, rows) => {
-        connection.release();
-        if (err) {
-          res.send(err.sqlMessage);
-          return;
-        }
-        res.json(rows);
-      });
-    });
+    try {
+      messages = await Message.findAll();
+      res.json(messages);
+    } catch (err) {
+      res.status(400).json(err);
+    }
   }
 
-  public getMessage(req: Request, res: Response): void {
-    const selectQuery: string = "SELECT * FROM message WHERE id = ?";
-    const query: string = mysql.format(selectQuery, [req.params.id]);
+  public async getMessage(req: Request, res: Response): Promise<any> {
+    let message: Message;
 
-    App.pool.getConnection((err, connection) => {
-      if (err) {
-        res.send(err);
-        return;
-      }
-
-      connection.query(query, (err, rows) => {
-        connection.release();
-        if (err) {
-          res.send(err.sqlMessage);
-          return;
-        }
-        res.json(rows);
-      });
-    });
+    try {
+      message = await Message.findByPk(req.params.id);
+      res.json(message);
+    } catch (err) {
+      res.status(400).json(err);
+    }
   }
 
-  public insertMessage(req: Request, res: Response): void {
-    const insertQuery: string = "INSERT INTO message (name,text) VALUES (?,?)";
-    const query: string = mysql.format(insertQuery, [req.body.name, req.body.text]);
+  public async insertMessage(req: Request, res: Response): Promise<any> {
+
     const errors: Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
       return;
     }
 
-    App.pool.query(query, (err, response) => {
-      if (err) {
-        res.send(err.sqlMessage);
-        return;
-      }
+    let newMessage: Message;
 
-      res.json({ success: true });
-    });
+    try {
+      newMessage = await Message.create({
+        name: req.body.name,
+        text: req.body.text,
+      });
+
+      res.json(newMessage);
+    } catch (err) {
+      res.status(400).json(err);
+    }
   }
 
-  public updateMessage(req: Request, res: Response): void {
-    const updateQuery: string = "UPDATE message SET name = ?, text = ? WHERE id = ?";
-    const query: string = mysql.format(updateQuery, [req.body.name, req.body.text, req.params.id]);
+  public async updateMessage(req: Request, res: Response): Promise<any> {
     const errors: Result<ValidationError> = validationResult(req);
+
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
       return;
     }
 
-    App.pool.query(query, (err, response) => {
-      if (err) {
-        res.send(err.sqlMessage);
-        return;
-      }
+    let message: Message[];
+    let count: number;
+
+    try {
+      [count, message] = await Message.update(
+        {
+          name: req.body.name,
+          text: req.body.text,
+        },
+        {
+          where: { id: req.params.id }
+        }
+      );
 
       res.json({ success: true });
-    });
+    } catch (err) {
+      res.status(400).json(err);
+    }
   }
 }
