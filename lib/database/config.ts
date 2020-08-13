@@ -1,7 +1,6 @@
-import * as dotenv from "dotenv";
 import { IDatabaseConfig } from "../interfaces/db-config.interface";
 import { Dialect } from "sequelize/types";
-
+import * as dotenv from "dotenv";
 dotenv.config();
 
 export const databaseConfig: IDatabaseConfig = {

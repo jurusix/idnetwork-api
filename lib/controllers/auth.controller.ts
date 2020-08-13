@@ -65,7 +65,7 @@ export class AuthController {
         }
 
         const token = jwt.sign({ id: user.id }, authConfig.secret, {
-          expiresIn: 86400 // 24 hours
+          expiresIn: authConfig.tokenExpiration // 24 hours
         });
 
         let authorities = [];

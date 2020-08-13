@@ -3,7 +3,7 @@ import * as jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
 
 export function verifyToken(req, res, next): any {
-  let token: string = req.headers["x-access-token"];
+  let token: string = req.headers[authConfig.bearer];
 
   if (!token) {
     return res.status(403).send({
